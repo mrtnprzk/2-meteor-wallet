@@ -1,12 +1,28 @@
-import React from "react";
+import React, {useState} from "react";
 import { ContactsCollection } from "../../api/ContactsCollection";
 import {useTracker} from "meteor/react-meteor-data";
+import RemoveAlert from "./RemoveAlert";
 
 const ContactList = () => {
 
-    const contacts = useTracker(() => {
-        return ContactsCollection.find({}).fetch(); //Tracker 
-    });
+  const [removeMessage, setRemoveMessage] = useState("");
+
+  const contacts = useTracker(() => {
+    return ContactsCollection.find({}, {sort: { createdAt: -1 }}).fetch(); //Tracker 
+  });
+
+  const removeContact = (id, name) => {
+    Meteor.call("contacts.remove", {contactId: id}, (errorResponse) => {
+        if (errorResponse) {
+          console.log(errorResponse);
+        } else {
+          setRemoveMessage(`${name} removed from contact list`);
+          setTimeout(() => {
+            setRemoveMessage("");
+          }, "5000");
+        }
+      });
+    }
 
   return (
     <div>
@@ -14,6 +30,7 @@ const ContactList = () => {
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
           Contact List
         </h3>
+        {removeMessage && <RemoveAlert message={removeMessage} />}
         <ul
           role="list"
           className="mt-4 border-t border-b border-gray-200 divide-y divide-gray-200"
@@ -39,6 +56,14 @@ const ContactList = () => {
                   <p className="text-sm font-medium text-gray-500 truncate">
                     {person.email}
                   </p>
+                </div>
+                <div>
+                  <button
+                    onClick={() => removeContact(person._id, person.name)}
+                    className="inline-flex items-center shadow-md px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:py-1 duration-200"
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
             </li>

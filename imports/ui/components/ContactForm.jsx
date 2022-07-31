@@ -1,18 +1,36 @@
 import React, { useState } from "react";
-import { ContactsCollection } from "../../api/ContactsCollection";
+import { Meteor } from "meteor/meteor";
+import ErrorAlert from "./ErrorAlert";
+import SuccessAlert from "./SuccessAlert";
+// import { ContactsCollection } from "../../api/ContactsCollection"; //MiniMongo
 
 const ContactForm = () => {
 
     const [name, setName] = useState("")
     const [email, setEmail] = useState("");
     const [imageUrl, setImageUrl] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     const saveContact = () => {
-        ContactsCollection.insert({ name, email, imageUrl });
+      // ContactsCollection.insert({ name, email, imageUrl }); //MiniMongo
+      Meteor.call("contacts.insert", { name, email, imageUrl }, (errorResponse) => {
+        if (errorResponse) {
+          setErrorMessage(errorResponse.error);
+          setSuccessMessage("");
+        } else {
+          setName("");
+          setEmail("");
+          setImageUrl("");
+          setErrorMessage("");
+          setSuccessMessage("Contact saved.");
 
-        setName("");
-        setEmail("");
-        setImageUrl("");
+          setTimeout(() => {
+            setSuccessMessage("");
+          }, "7000");
+        }
+      });
+      
     };
 
   return (
@@ -66,6 +84,8 @@ const ContactForm = () => {
           />
         </div>
       </div>
+      {errorMessage && <ErrorAlert message={errorMessage} />}
+      {successMessage && <SuccessAlert message={successMessage} />}
       <div className="px-2 py-3 text-center">
         <button
           type="button"
